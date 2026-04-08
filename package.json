@@ -1,0 +1,14 @@
+{
+  "name": "cicd-project",
+  "version": "1.0.0",
+  "description": "CI/CD Pipeline Project",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "build": "echo Build successful",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
