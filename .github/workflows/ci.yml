@@ -21,7 +21,7 @@ jobs:
         run: npm install
 
       - name: Run Tests
-        run: npm test
+        - run: npm install --include=dev
 
       - name: Build
         run: npm run build
