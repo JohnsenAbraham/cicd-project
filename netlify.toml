@@ -1,8 +1,25 @@
-[functions]
-  directory = "netlify/functions"
+# netlify.toml
+# Drop this file in the ROOT of your repo.
+# Netlify reads it automatically on every deploy.
 
+[build]
+  # Folder that contains your static frontend (the index.html)
+  publish = "public"
+
+  # Folder that contains your serverless functions
+  functions = "netlify/functions"
+
+  # Build command (nothing to compile for a static site)
+  command = "echo 'Build complete'"
+
+# Redirect /api/* → the Netlify function so your Express routes keep working
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api"
+  from   = "/api/*"
+  to     = "/.netlify/functions/api/:splat"
   status = 200
 
+# Serve index.html for all unmatched routes (SPA fallback)
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
