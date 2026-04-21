@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI/CD Pipeline Project</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #171b22;
+    --border: #1f2530;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --green: #00ff88;
+    --yellow: #fbbf24;
+    --red: #f43f5e;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 6vw;
+    z-index: 1;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 2px;
+    margin-bottom: 32px;
+    width: fit-content;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(42px, 7vw, 90px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  h1 .accent { color: var(--accent); }
+  h1 .dim { color: var(--muted); }
+
+  .hero-sub {
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.8;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 36px;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .tag {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--surface);
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .tag:hover { border-color: var(--accent); color: var(--accent); }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 6vw;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+  .scroll-hint::after {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--border);
+    display: inline-block;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 6vw;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  /* PIPELINE STAGES */
+  .pipeline {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .pipeline-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.red { background: #f43f5e; }
+  .dot.yellow { background: #fbbf24; }
+  .dot.green { background: #00ff88; }
+
+  .pipeline-title {
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .stages {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+  }
+
+  .stage {
+    padding: 28px 24px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.3s;
+  }
+  .stage:last-child { border-right: none; }
+  .stage:hover { background: rgba(0,229,255,0.03); }
+
+  .stage::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    z-index: 2;
+  }
+  .stage:last-child::after { display: none; }
+
+  .stage-icon {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .stage-name {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .stage-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .stage-status {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .status-pass { color: var(--green); }
+  .status-pass::before { content: '✓ '; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 20px;
+  }
+
+  .code-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .code-filename {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .code-lang {
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(0,229,255,0.08);
+    padding: 2px 7px;
+    border-radius: 2px;
+  }
+
+  pre {
+    padding: 24px;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    color: #94a3b8;
+  }
+
+  .kw { color: #c084fc; }
+  .str { color: #86efac; }
+  .fn { color: var(--accent); }
+  .comment { color: #334155; }
+  .num { color: var(--yellow); }
+
+  /* GRID CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .card {
+    background: var(--surface);
+    padding: 32px 28px;
+    transition: background 0.2s;
+  }
+  .card:hover { background: var(--surface2); }
+
+  .card-icon {
+    width: 40px; height: 40px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 18px;
+  }
+
+  .card h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .card p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  /* API ENDPOINTS */
+  .endpoints { display: flex; flex-direction: column; gap: 12px; }
+
+  .endpoint {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .endpoint:hover { border-color: rgba(0,229,255,0.3); }
+
+  .method {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    min-width: 50px;
+    text-align: center;
+  }
+  .method.get { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+
+  .endpoint-path {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .endpoint-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .endpoint-code {
+    font-size: 11px;
+    color: var(--yellow);
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.15);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 32px 24px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    display: block;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 40px 6vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .footer-logo span { color: var(--accent); }
+
+  .footer-meta {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 6vw;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="badge">Advanced CI/CD Pipeline</div>
+  <h1>
+    <span class="dim">Ship code</span><br>
+    with <span class="accent">confidence.</span>
+  </h1>
+  <p class="hero-sub">
+    A production-grade CI/CD pipeline built with GitHub Actions, Docker, SonarCloud, and Netlify serverless functions — automated from commit to cloud.
+  </p>
+  <div class="hero-tags">
+    <span class="tag">Node.js 18</span>
+    <span class="tag">Express.js</span>
+    <span class="tag">GitHub Actions</span>
+    <span class="tag">Docker</span>
+    <span class="tag">SonarCloud</span>
+    <span class="tag">Netlify</span>
+    <span class="tag">Jest</span>
+    <span class="tag">v1.0.0</span>
+  </div>
+  <div class="scroll-hint">Explore below</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PIPELINE -->
+<section>
+  <div class="section-label">Pipeline stages</div>
+
+  <div class="pipeline">
+    <div class="pipeline-header">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+      <span class="pipeline-title">.github/workflows/ci.yml — push → main</span>
+    </div>
+    <div class="stages">
+      <div class="stage">
+        <div class="stage-icon">🔨</div>
+        <div class="stage-name">Build & Test</div>
+        <div class="stage-desc">Install deps with <code>npm ci</code>, run full Jest test suite with coverage</div>
+        <div class="stage-status status-pass">passing</div>
+      </div>
+      <div class="stage">
+        <div class="stage-icon">🔒</div>
+        <div class="stage-name">Security</div>
+        <div class="stage-desc">npm audit at high severity threshold — blocks on critical vulnerabilities</div>
+        <div class="stage-status status-pass">clean</div>
+      </div>
+      <div class="stage">
+        <div class="stage-icon">📊</div>
+        <div class="stage-name">SonarCloud</div>
+        <div class="stage-desc">Static analysis, code smells, coverage upload, quality gate enforcement</div>
+        <div class="stage-status status-pass">passing</div>
+      </div>
+      <div class="stage">
+        <div class="stage-icon">🐳</div>
+        <div class="stage-name">Docker</div>
+        <div class="stage-desc">Build Alpine image, push tagged release to DockerHub registry</div>
+        <div class="stage-status status-pass">deployed</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- API ENDPOINTS -->
+<section>
+  <div class="section-label">API Endpoints</div>
+
+  <div class="endpoints">
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/</span>
+      <span class="endpoint-desc">Root — pipeline status response</span>
+      <span class="endpoint-code">200</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/health</span>
+      <span class="endpoint-desc">Health check — returns <code style="color:var(--green)">{ status: "OK" }</code></span>
+      <span class="endpoint-code">200</span>
+    </div>
+    <div class="endpoint" style="opacity:0.5">
+      <span class="method get">GET</span>
+      <span class="endpoint-path">/*</span>
+      <span class="endpoint-desc">Unmatched routes (Netlify function catch-all)</span>
+      <span class="endpoint-code" style="color:var(--muted);border-color:var(--border);background:transparent">404</span>
+    </div>
+  </div>
+
+  <div class="code-block" style="margin-top:24px">
+    <div class="code-header">
+      <div class="code-filename">
+        <span>src/app.js</span>
+      </div>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <pre><span class="kw">const</span> <span class="fn">express</span> = <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> app = <span class="fn">express</span>();
+
+app.<span class="fn">use</span>(express.<span class="fn">json</span>());
+
+<span class="comment">// Root route</span>
+app.<span class="fn">get</span>(<span class="str">'/'</span>, (req, res) =&gt; {
+    res.<span class="fn">status</span>(<span class="num">200</span>).<span class="fn">json</span>({ message: <span class="str">"CI/CD Pipeline Working"</span> });
+});
+
+<span class="comment">// Health check</span>
+app.<span class="fn">get</span>(<span class="str">'/health'</span>, (req, res) =&gt; {
+    res.<span class="fn">status</span>(<span class="num">200</span>).<span class="fn">json</span>({ status: <span class="str">"OK"</span> });
+});
+
+module.exports = app;</pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STATS -->
+<section>
+  <div class="section-label">Project snapshot</div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-value">4</span>
+      <span class="stat-label">Pipeline stages</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">3</span>
+      <span class="stat-label">Test cases</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">100%</span>
+      <span class="stat-label">Route coverage</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">18</span>
+      <span class="stat-label">Node version</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">ISC</span>
+      <span class="stat-label">License</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section>
+  <div class="section-label">Infrastructure</div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <h3>GitHub Actions</h3>
+      <p>Triggered on every push to <code style="color:var(--accent)">main</code>. Four sequential jobs: build, security, quality, and deploy — each gating the next.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🐳</div>
+      <h3>Docker</h3>
+      <p>Minimal <code style="color:var(--accent)">node:18-alpine</code> image. Production-only dependencies, auto-pushed to DockerHub on successful pipeline completion.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">☁️</div>
+      <h3>Netlify Serverless</h3>
+      <p>Express app wrapped in <code style="color:var(--accent)">serverless-http</code> and deployed as a Netlify Function — zero cold-start overhead.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🧪</div>
+      <h3>Jest + Supertest</h3>
+      <p>Integration tests against the live Express router — root, health, and 404 coverage — with automatic coverage reports uploaded to SonarCloud.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔍</div>
+      <h3>SonarCloud</h3>
+      <p>Continuous code quality and security analysis. Quality gate must pass before Docker build runs — bad code never ships.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔐</div>
+      <h3>Security Gate</h3>
+      <p><code style="color:var(--accent)">npm audit --audit-level=high</code> blocks on critical CVEs. Secrets managed via GitHub encrypted secrets, never hardcoded.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DOCKERFILE -->
+<section>
+  <div class="section-label">Container definition</div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-filename">
+        <span>Dockerfile</span>
+      </div>
+      <span class="code-lang">Docker</span>
+    </div>
+    <pre><span class="kw">FROM</span> <span class="str">node:18-alpine</span>
+
+<span class="kw">WORKDIR</span> /app
+
+<span class="kw">COPY</span> package*.json ./
+<span class="kw">RUN</span> npm ci <span class="fn">--only=production</span>   <span class="comment"># lean image, no devDeps</span>
+
+<span class="kw">COPY</span> . .
+
+<span class="kw">EXPOSE</span> <span class="num">3000</span>
+<span class="kw">CMD</span> [<span class="str">"node"</span>, <span class="str">"src/server.js"</span>]</pre>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<footer>
+  <div class="footer-logo">cicd<span>.</span>project</div>
+  <div class="footer-meta">v1.0.0 · by Johnsen · ISC License</div>
+</footer>
+
+</body>
+</html>
